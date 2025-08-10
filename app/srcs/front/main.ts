@@ -125,7 +125,8 @@ function showView(view: 'login' | 'register' | 'home' | 'game' | 'profile' | 'pu
         let gameState: any = null;
         let animationId: number | null = null;
         let finished: boolean = false;
-        ws = new WebSocket('ws://localhost:8081');
+        const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
+        ws = new WebSocket(`${wsProtocol}://${location.host}/ws/`);
         ws.onopen = () => {
           ws.send(JSON.stringify({ type: 'join' }));
         };

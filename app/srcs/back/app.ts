@@ -7,6 +7,7 @@ import fastifyStatic from '@fastify/static';
 import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
+ 
 
 declare module '@fastify/session' {
   interface SessionData {
@@ -21,6 +22,9 @@ fastify.register(fastifyStatic, {
   root: path.join(__dirname, 'avatars'),
   prefix: '/avatars/',
 });
+
+// Serve frontend static files (mounted at /app/public via compose)
+// Do NOT register a root static prefix to avoid swallowing /api routes.
 
 fastify.register(multipart, {
   limits: {
@@ -53,14 +57,21 @@ fastify.addHook('preHandler', async (req: FastifyRequest, reply: FastifyReply) =
 
 fastify.post('/api/register', async (req, reply) => {
   const { email, password, displayName } = req.body as any;
-  const hash = await bcrypt.hash(password, 10);
+  console.log('POST /api/register body =', req.body);
+  if (!email || !password || !displayName) {
+    return reply.status(400).send({ error: 'Champs requis manquants.' });
+  }
   try {
-    const user = await prisma.user.create({
-      data: { email, password: hash, displayName }
-    });
-    reply.send({ id: user.id, email: user.email, displayName: user.displayName });
-  } catch (e) {
-    reply.status(400).send({ error: 'Email ou pseudo déjà utilisé.' });
+    const exists = await prisma.user.findFirst({ where: { OR: [{ email }, { displayName }] } });
+    if (exists) {
+      return reply.status(400).send({ error: 'Email ou pseudo déjà utilisé.' });
+    }
+    const hash = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({ data: { email, password: hash, displayName } });
+    return reply.send({ id: user.id, email: user.email, displayName: user.displayName });
+  } catch (e: any) {
+    console.error('Register error:', e?.message || e);
+    return reply.status(400).send({ error: 'Inscription impossible.' });
   }
 });
 
@@ -268,6 +279,90 @@ fastify.post('/api/friends/:id', async (req, reply) => {
     data: { userId, friendId, status: 'PENDING' }
   });
   reply.send({ success: true });
+});
+
+// Serve SPA files explicitly to avoid wildcard issues
+const publicDir = path.join(__dirname, 'public');
+function safeJoinPublic(p: string): string | null {
+  const target = path.join(publicDir, p.replace(/^\/+/, ''));
+  const normalized = path.normalize(target);
+  if (!normalized.startsWith(publicDir)) return null;
+  return normalized;
+}
+
+function sendFile(reply: FastifyReply, filePath: string) {
+  const ext = path.extname(filePath).toLowerCase();
+  const typeMap: Record<string, string> = {
+    '.html': 'text/html; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.ico': 'image/x-icon',
+    '.svg': 'image/svg+xml'
+  };
+  const contentType = typeMap[ext] || 'application/octet-stream';
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+    reply.status(404).send({ error: 'Not Found' });
+    return;
+  }
+  if (contentType.startsWith('text/') || contentType.startsWith('application/javascript')) {
+    const text = fs.readFileSync(filePath, 'utf-8');
+    reply.type(contentType).send(text);
+  } else {
+    const buf = fs.readFileSync(filePath);
+    reply.type(contentType).send(buf);
+  }
+}
+
+fastify.get('/', (_req, reply) => {
+  const filePath = path.join(publicDir, 'index.html');
+  const text = fs.readFileSync(filePath, 'utf-8');
+  console.log('Serving / index.html bytes=', Buffer.byteLength(text, 'utf-8'));
+  return reply.type('text/html; charset=utf-8').send(text);
+});
+fastify.get('/index.html', (_req, reply) => {
+  const filePath = path.join(publicDir, 'index.html');
+  const text = fs.readFileSync(filePath, 'utf-8');
+  return reply.type('text/html; charset=utf-8').send(text);
+});
+fastify.get('/main.js', (_req, reply) => {
+  const filePath = path.join(publicDir, 'main.js');
+  const text = fs.readFileSync(filePath, 'utf-8');
+  return reply.type('application/javascript; charset=utf-8').send(text);
+});
+fastify.get('/favicon.ico', (_req, reply) => {
+  const filePath = path.join(publicDir, 'favicon.ico');
+  const buf = fs.readFileSync(filePath);
+  return reply.type('image/x-icon').send(buf);
+});
+fastify.get('/img/*', (req, reply) => {
+  const rest = (req.params as any)['*'] as string || '';
+  const p = safeJoinPublic(path.join('img', rest));
+  if (!p) return reply.status(404).send({ error: 'Not Found' });
+  const ext = path.extname(p).toLowerCase();
+  const type = ext === '.png' ? 'image/png' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'application/octet-stream';
+  const buf = fs.readFileSync(p);
+  return reply.type(type).send(buf);
+});
+fastify.get('/styles.css', (_req, reply) => {
+  const filePath = path.join(publicDir, 'styles.css');
+  const text = fs.readFileSync(filePath, 'utf-8');
+  return reply.type('text/css; charset=utf-8').send(text);
+});
+fastify.get('/profile-blur.css', (_req, reply) => {
+  const filePath = path.join(publicDir, 'profile-blur.css');
+  const text = fs.readFileSync(filePath, 'utf-8');
+  return reply.type('text/css; charset=utf-8').send(text);
+});
+
+// Diagnostics
+fastify.get('/health', (_req, reply) => {
+  return reply.type('text/plain').send('ok');
+});
+fastify.get('/hello', (_req, reply) => {
+  return reply.type('text/plain').send('hello');
 });
 
 fastify.post('/api/friends/:id/accept', async (req, reply) => {

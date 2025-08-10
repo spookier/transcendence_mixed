@@ -42,8 +42,11 @@ services:
     expose:
       - "3000"
     working_dir: /app
-    command: ["npm", "run", "dev"]
+    command: ["sh", "-lc", "npx prisma migrate deploy && npm run dev"]
     networks: [transcendence]
+    # No need to mount frontend into backend; edge serves the SPA
+
+  # (removed) Frontend build helper; not needed since static files are served directly by edge
 
   # --- App websocket ---
   websocket-pong:
@@ -57,19 +60,6 @@ services:
     command: ["node", "ws-pong-server.js"]
     networks: [transcendence]
 
-  # (optional) Keep app's nginx available on the internal network only.
-  # If your frontend is served by this image, you can proxy to it from the edge.
-  # app-nginx:
-  #   build:
-  #     context: ../app/srcs
-  #     dockerfile: ./nginx/Dockerfile
-  #   container_name: app-nginx
-  #   expose:
-  #     - "80"
-  #     - "443"
-  #   networks: [transcendence]
-
-  # --- Edge: HTTPS + WAF (ModSecurity) reverse-proxy ---
   edge:
     image: nginx-modsec
     container_name: nginx-modsec
@@ -85,7 +75,8 @@ services:
     ports:
       - "8443:443"        # expose HTTPS to host on 8443 to avoid conflicts
     volumes:
-      - ../cybersec/srcs/php/app:/var/www/html                # serve /auth assets
+      - ../app/srcs/front:/usr/share/nginx/html:ro            # serve SPA static files
+      - ../cybersec/srcs/php/app:/var/www/html                 # serve /auth assets
       - ../cybersec/srcs/nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro
       - ../cybersec/srcs/nginx/conf/modsecurity.conf:/opt/ModSecurity/modsecurity.conf:ro
       - ../cybersec/srcs/nginx/certs:/etc/nginx/certs:ro
