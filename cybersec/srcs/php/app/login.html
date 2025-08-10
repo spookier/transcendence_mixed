@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Connexion</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    label { display: block; margin-top: 1rem; }
+    input { padding: 5px; width: 250px; }
+  </style>
+</head>
+<body>
+  <h2>Connexion</h2>
+
+  <form id="login-form">
+    <label>Email :
+      <input type="email" name="email" required>
+    </label>
+
+    <label>Mot de passe :
+      <input type="password" name="password" required>
+    </label>
+
+    <label>Code OTP (2FA, si activé) :
+      <input type="text" name="otp" pattern="[0-9]{6}" maxlength="6" placeholder="123456">
+    </label>
+
+    <button type="submit">Se connecter</button>
+  </form>
+
+  <div id="message" style="margin-top: 1rem; color: red;"></div>
+
+  <script>
+    const form = document.getElementById("login-form");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const data = new URLSearchParams();
+      for (const [key, value] of formData.entries()) {
+        data.append(key, value);
+      }
+
+      const res = await fetch("/app/login.php", {
+        method: "POST",
+        body: data
+      });
+
+      const json = await res.json();
+
+      if (res.ok && json.token) {
+        localStorage.setItem("jwt_token", json.token);
+        message.style.color = "green";
+        message.textContent = "✅ Connexion réussie";
+        window.location.href = "/welcome.html";
+      } else {
+        message.style.color = "red";
+        message.textContent = "❌ " + (json.error || "Erreur lors de la connexion");
+      }
+    });
+  </script>
+</body>
+</html>

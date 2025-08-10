@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Transcendence</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; text-align: center; }
+    button { margin: 1rem; padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Bienvenue sur Transcendence 🎉</h1>
+
+  <button onclick="window.location.href = '/profile.html'">Voir mon profil</button>
+  <button id="logout-btn">Se déconnecter</button>
+
+  <script>
+    const token = localStorage.getItem("jwt_token");
+
+    if (!token) {
+      // Rediriger si pas connecté
+      alert("❌ Non connecté. Redirection vers la page de connexion.");
+      window.location.href = "/login.html";
+    }
+
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      localStorage.removeItem("jwt_token");
+      alert("Déconnecté ✅");
+      window.location.href = "/login.html";
+    });
+  </script>
+</body>
+</html>

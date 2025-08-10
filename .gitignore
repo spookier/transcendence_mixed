@@ -1,0 +1,36 @@
+# Node
+node_modules/
+dist/
+build/
+.cache/
+.npm/
+.yarn/
+
+# PHP
+vendor/
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs & runtime
+*.log
+*.pid
+*.seed
+tmp/
+.cache/
+.DS_Store
+
+# Databases
+*.sqlite
+*.db
+
+# Certificates (generate them locally)
+*.crt
+*.key
+*.pem
+
+# Env files
+.env
+.env.local
+.env.*

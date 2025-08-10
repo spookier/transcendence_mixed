@@ -1,0 +1,16 @@
+A FIX   :
+            Inscription sans jwt_secret
+
+A FAIRE :
+            HTML pour QRcode
+            HTML pour Legal Notices
+            HTML pour Privacy policy
+
+            .php -> .ts
+            file pour, voir, modifier, supprimer, anonymiser personal data
+            cle jwt_secret dans .env
+
+
+A TESTER :
+
+        Attaque XSS : curl -isk 'https://localhost:8443/?q=%3Cscript%3Ealert(1)%3C/script%3E'

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Mon profil</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    .info { margin-top: 1rem; }
+    button { margin-top: 1rem; padding: 8px 16px; }
+  </style>
+</head>
+<body>
+  <h2>Profil utilisateur</h2>
+
+  <div id="profile" class="info"></div>
+  <div id="error" style="color: red;"></div>
+  <button id="logout-btn" style="display: none;">Se déconnecter</button>
+
+  <script>
+    const profileDiv = document.getElementById("profile");
+    const errorDiv = document.getElementById("error");
+    const logoutBtn = document.getElementById("logout-btn");
+
+    const token = localStorage.getItem("jwt_token");
+
+    if (!token) {
+      alert("❌ Non connecté. Redirection vers la page de connexion.");
+      window.location.href = "/login.html";
+    } else {
+      fetch("/app/me.php", {
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          errorDiv.textContent = "❌ " + data.error;
+        } else {
+          profileDiv.innerHTML = `
+            <p><strong>Email :</strong> ${data.email}</p>
+            <p><strong>2FA activé :</strong> ${data.twofa ? "Oui 🔐" : "Non"}</p>
+          `;
+          logoutBtn.style.display = "inline-block";
+        }
+      })
+      .catch(() => {
+        errorDiv.textContent = "❌ Erreur lors de la récupération du profil.";
+      });
+    }
+
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("jwt_token");
+      alert("Déconnecté ✅");
+      window.location.href = "/login.html";
+    });
+  </script>
+</body>
+</html>

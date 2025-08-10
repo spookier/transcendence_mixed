@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./db.sqlite"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  displayName  String   @unique
+  avatar       String?
+  createdAt    DateTime @default(now())
+
+  friends      Friend[] @relation("UserFriends")
+  friendOf     Friend[] @relation("FriendRelation")
+}
+
+model Friend {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  friendId  Int
+  status    String   @default("PENDING") // "PENDING" ou "ACCEPTED"
+  createdAt DateTime @default(now())
+
+  user   User @relation("UserFriends", fields: [userId], references: [id])
+  friend User @relation("FriendRelation", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
+}

@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "typescript": "^5.8.3",
+    "@fastify/session": "^8.0.0",
+    "@fastify/cookie": "^8.4.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.9.0"
+  }
+}

@@ -1,0 +1,21 @@
+Politique de confidentialité :
+
+1. Données collectées
+Ce site ne collecte pas directement de données personnelles identifiables, à l’exception des informations que vous pourriez fournir volontairement dans le formulaire d'inscription.
+
+2. Cookies et suivi
+Le site peut utiliser des cookies strictement nécessaires à son fonctionnement (par exemple pour enregistrer le score du jeu pendant la session).
+Aucune donnée n’est transmise à des tiers à des fins publicitaires.
+
+3. Finalité du traitement
+Les données éventuellement collectées servent uniquement à assurer le bon fonctionnement du jeu et à améliorer l’expérience utilisateur.
+
+4. Conservation des données
+Les éventuelles données collectées sont conservées pour une durée maximale de 12 mois.
+
+5. Droits des utilisateurs
+Conformément au RGPD, vous disposez d’un droit d’accès, de rectification et de suppression de vos données.
+Pour exercer ce droit : [redirection vers la page des informations personnelles]
+
+6. Contact
+Pour toute question relative à la protection des données : kle-rest@student.42.fr

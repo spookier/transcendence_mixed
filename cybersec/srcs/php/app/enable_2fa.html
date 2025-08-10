@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Activer l'authentification à deux facteurs (2FA)</title>
+</head>
+<body>
+    <h2>Activer la double authentification</h2>
+
+    <button id="activate-2fa">Générer mon QR Code</button>
+    <div id="qr-container" style="margin-top: 20px;"></div>
+    <div id="secret" style="margin-top: 10px; font-family: monospace;"></div>
+
+    <script>
+        document.getElementById('activate-2fa').addEventListener('click', async () => {
+            const token = localStorage.getItem('jwt_token'); // ou à adapter selon ton app
+
+            if (!token) {
+                alert("Token manquant. Connecte-toi d'abord.");
+                return;
+            }
+
+            const res = await fetch('/app/enable_2fa.php', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+
+            if (!res.ok) {
+                alert("Erreur : " + res.status);
+                return;
+            }
+
+            const data = await res.json();
+            const qrContainer = document.getElementById('qr-container');
+            const secretDisplay = document.getElementById('secret');
+
+            qrContainer.innerHTML = `<img src="${data.qr_code}" alt="QR Code 2FA">`;
+            secretDisplay.textContent = `Code secret : ${data.secret}`;
+        });
+    </script>
+</body>
+</html>
